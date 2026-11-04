@@ -2,6 +2,8 @@
 
 Este documento reúne as escolhas de produto e arquitetura do MVP, os motivos de cada escolha.
 
+O [histórico técnico de decisões](docs/decisions-historico-tecnico.md) preserva os registros cronológicos da implementação.
+
 ## 1. Por que usar Supabase? Cloud ou self-hosted?
 
 **Decisão:** usar Supabase Cloud para banco de dados PostgreSQL, autenticação e armazenamento de imagens.

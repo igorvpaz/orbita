@@ -3,6 +3,8 @@
 .pnpm-store
 .tmp-pglast
 .tools
+.playwright-cli
+output
 .env
 .env.*
 **/node_modules

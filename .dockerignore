@@ -2,6 +2,8 @@
 .pnpm-store
 .tmp-pglast
 .tools
+.playwright-cli
+output
 docs/branding/*preview.png
 **/node_modules
 **/.next

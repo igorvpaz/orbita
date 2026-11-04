@@ -13,6 +13,10 @@ playwright-report/
 test-results/
 .DS_Store
 
+# Local browser snapshots and generated video artifacts.
+/.playwright-cli/
+/output/
+
 # Local credentials and operational artifacts must never reach the public repo.
 supabase/.temp/
 supabase/.branches/
