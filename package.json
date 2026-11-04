@@ -1,0 +1,18 @@
+{
+  "name": "orbita-product-builder",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "pnpm --filter @orbita/web dev",
+    "build": "pnpm --filter @orbita/web build",
+    "start": "pnpm --filter @orbita/web start",
+    "lint": "pnpm --filter @orbita/web lint",
+    "typecheck": "pnpm --filter @orbita/shared typecheck && pnpm --filter @orbita/web typecheck",
+    "test": "pnpm --filter @orbita/shared test && pnpm --filter @orbita/web test",
+    "test:rls": "pnpm --filter @orbita/web test:rls",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}

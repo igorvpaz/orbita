@@ -1,0 +1,14 @@
+.git
+.pnpm-store
+.tmp-pglast
+.tools
+docs/branding/*preview.png
+**/node_modules
+**/.next
+.env*
+**/.env
+**/.env.*
+!.env.example
+coverage
+test-results
+playwright-report

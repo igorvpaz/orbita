@@ -1,0 +1,23 @@
+-- Executar com psql -v admin_email=... -v admin_name=... -f supabase/bootstrap-admin.psql.
+-- Crie antes o usuário confirmado em Supabase Auth. Sem senha ou UUID no Git.
+\set ON_ERROR_STOP on
+begin;
+select set_config('app.bootstrap_admin_email', :'admin_email', true);
+insert into public.profiles (id, email, full_name, role)
+select id, email, :'admin_name', 'admin'
+from auth.users
+where lower(email) = lower(:'admin_email')
+  and email_confirmed_at is not null
+on conflict (id) do nothing;
+
+do $$
+begin
+  if not exists (
+    select 1 from public.profiles p
+    where p.role = 'admin' and lower(p.email) = lower(current_setting('app.bootstrap_admin_email'))
+  ) then
+    raise exception 'Nenhum admin confirmado encontrado. Bootstrap cancelado.';
+  end if;
+end;
+$$;
+commit;

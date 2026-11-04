@@ -1,0 +1,16 @@
+.git
+#!include:.gitignore
+.pnpm-store
+.tmp-pglast
+.tools
+.env
+.env.*
+**/node_modules
+**/.next
+**/.env
+**/.env.*
+**/*.tsbuildinfo
+coverage
+test-results
+playwright-report
+docs/branding/*preview.png
