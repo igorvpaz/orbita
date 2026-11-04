@@ -1,3 +1,4 @@
+import { serverTranslator } from '@/lib/i18n-server'
 import { getMemberState } from '@/lib/auth'
 import { MemberCatalog } from '@/components/member-catalog'
 export default async function MemberPage({
@@ -7,18 +8,19 @@ export default async function MemberPage({
     unitId?: string
   }>
 }) {
+  const t = await serverTranslator()
   const state = await getMemberState()
   if (!state.active)
     return (
       <section className="surface-card upgrade-panel">
         <p className="text-sm uppercase tracking-[0.25em] text-[#967a25]">
-          {'Assinatura'}
+          {t('Assinatura')}
         </p>
-        <h1 className="mt-4 text-3xl font-bold">{'Acesso pausado'}</h1>
+        <h1 className="mt-4 text-3xl font-bold">{t('Acesso pausado')}</h1>
         <p className="mt-4 text-[#77796e]">
-          {
-            'Sua assinatura está inativa, ainda não começou ou expirou. Procure a recepção para regularizar.'
-          }
+          {t(
+            'Sua assinatura está inativa, ainda não começou ou expirou. Procure a recepção para regularizar.',
+          )}
         </p>
       </section>
     )

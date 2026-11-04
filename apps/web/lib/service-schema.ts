@@ -9,6 +9,14 @@ export const ruleSchema = z.object({
 })
 
 export const createServiceSchema = z.object({
+  capacityPerSlot: z.number().int().min(1).max(500).default(10),
+  slotDurationMinutes: z
+    .number()
+    .int()
+    .min(15)
+    .max(240)
+    .multipleOf(15)
+    .default(60),
   accessPlan: z.enum(['basic', 'premium']).default('basic'),
   unitId: z.uuid(),
   partnerId: z.uuid(),
@@ -22,6 +30,14 @@ export const createServiceSchema = z.object({
 })
 
 export const updateServiceSchema = createServiceSchema.partial().extend({
+  capacityPerSlot: z.number().int().min(1).max(500).optional(),
+  slotDurationMinutes: z
+    .number()
+    .int()
+    .min(15)
+    .max(240)
+    .multipleOf(15)
+    .optional(),
   status: z.enum(['draft', 'published', 'archived']).optional(),
   accessPlan: z.enum(['basic', 'premium']).optional(),
   rules: z.array(ruleSchema).max(20).optional(),

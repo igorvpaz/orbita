@@ -56,8 +56,24 @@ export function dbResult<T>(result: {
       throw new ApiError(409, 'Registro duplicado')
     if (result.error.code === '42501')
       throw new ApiError(403, 'Acesso não autorizado')
-    if (result.error.code === '23514')
-      throw new ApiError(422, 'Regra de negócio inválida')
+    if (result.error.code === '23514') {
+      const messages = new Set([
+        'Escolha uma data nos próximos 30 dias',
+        'Horário inválido ou indisponível',
+        'Escolha um horário válido',
+        'Existem reservas futuras. Mantenha a duração dos horários.',
+        'Capacidade menor que as reservas existentes',
+        'Mantenha pelo menos um administrador',
+      ])
+      throw new ApiError(
+        422,
+        messages.has(result.error.message)
+          ? result.error.message
+          : 'Regra de negócio inválida',
+      )
+    }
+    if (result.error.code === 'P0003')
+      throw new ApiError(409, 'Horário esgotado. Escolha outro horário.')
     if (result.error.code === 'P0001')
       throw new ApiError(429, 'Limite de operações atingido')
     console.error('database_error', result.error.code ?? 'unknown')

@@ -69,3 +69,11 @@ Visibilidade e contratação são controles distintos: `private.is_service_visib
 Admin e membro reutilizam o mesmo shell responsivo. O módulo de instalação contém apenas instalação/instruções. O provider captura `beforeinstallprompt` globalmente antes de o usuário navegar até o módulo; iOS recebe instruções de instalação manual. Manifest, safe zone do ícone maskable e service worker estático foram preparados. Nenhuma resposta privada é armazenada no cache e a página offline é HTML estático. A suíte de cache valida API privada, navegação autenticada, fallback offline e preservação de caches alheios.
 
 O advisor de segurança não trouxe novos achados de schema. Persiste o aviso de [proteção contra senhas vazadas desabilitada](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection), registrado anteriormente para este treinamento.
+
+## Reservas e gestão — 04/11/2026
+
+Reservas futuras substituem o pedido sem horário. Cada pedido ocupa uma vaga; `requested` e `confirmed` ocupam capacidade e `cancelled` libera. O banco deriva fim/preço/unidade, valida plano e validade até o fim da reserva, e usa lock por serviço para evitar sobrelotação. Há até 30 dias de antecedência. Pedidos antigos mantêm horário nulo como histórico, sem inventar reservas. A duração não muda quando existem reservas futuras e a capacidade não pode cair abaixo da ocupação existente.
+
+A migração expansiva mantém compatibilidade com a revisão antiga; `require_scheduled_reservations` é aplicada após a revisão nova receber tráfego para exigir horário também na Data API. O CRUD de administradores usa Auth Admin somente no servidor. FKs de autoria passam a SET NULL para preservar histórico; o perfil acompanha exclusão Auth via CASCADE. Um trigger serializado preserva o último administrador.
+
+Métricas agregadas executam como invoker com RLS e verificação administrativa. Datas de calendário usam America/Sao_Paulo; valores confirmados são nominais e filtrados por confirmed_at. Seis idiomas foram escolhidos pelo usuário: PT, EN, ES, FR, DE e IT. Traduções são locais e a preferência inicial vem de Accept-Language; cookie guarda a escolha manual. Campos editáveis nunca recebem tradução automática, para não sobrescrever conteúdo de origem.

@@ -1,8 +1,11 @@
 'use client'
+import { useLanguage } from '@/components/language-provider'
 import { useEffect, useState } from 'react'
 import { ContentSkeleton } from '@/components/loading-skeleton'
 import { apiRequest } from '@/components/api-client'
 type Order = {
+  scheduled_start: string | null
+  scheduled_end: string | null
   id: string
   service_name: string
   status: string
@@ -10,6 +13,7 @@ type Order = {
   created_at: string
 }
 export function MemberOrders() {
+  const { t, locale } = useLanguage()
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [error, setError] = useState('')
   useEffect(() => {
@@ -27,11 +31,11 @@ export function MemberOrders() {
   return (
     <div className="admin-workspace member-orders">
       <header className="workspace-heading">
-        <h1>{'Meus pedidos'}</h1>
+        <h1>{t('Meus pedidos')}</h1>
       </header>
       {error && (
         <p role="alert" className="text-[#a54a35]">
-          {error}
+          {t(error, 'Falha na operação')}
         </p>
       )}
       {orders === null && !error && <ContentSkeleton variant="orders" />}
@@ -43,21 +47,30 @@ export function MemberOrders() {
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-semibold">{order.service_name}</h2>
             <span className="rounded-full bg-[#edf5e8] px-3 py-1 text-xs text-[#937728]">
-              {labels[order.status] ?? order.status}
+              {t(labels[order.status] ?? order.status)}
             </span>
           </div>
+          {order.scheduled_start && (
+            <p className="booking-order-date">
+              {new Date(order.scheduled_start).toLocaleString(locale, {
+                timeZone: 'America/Sao_Paulo',
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}
+            </p>
+          )}
           <p className="mt-3 text-sm text-[#77796d]">
             {new Intl.NumberFormat('pt-BR', {
               style: 'currency',
               currency: 'BRL',
             }).format(order.total_cents / 100)}{' '}
-            · {new Date(order.created_at).toLocaleDateString('pt-BR')}
+            · {new Date(order.created_at).toLocaleDateString(locale)}
           </p>
         </article>
       ))}
       {orders?.length === 0 && (
         <p className="rounded-2xl border border-[#e7e7df] p-6 text-[#77796d]">
-          {'Você ainda não tem pedidos.'}
+          {t('Você ainda não tem pedidos.')}
         </p>
       )}
     </div>

@@ -1,8 +1,11 @@
+'use client'
+import { useLanguage } from '@/components/language-provider'
 import type { ReactNode } from 'react'
 export function Skeleton({ className = '' }: { className?: string }) {
   return <span aria-hidden="true" className={`skeleton ${className}`} />
 }
 export function LoadingRegion({ children }: { children: ReactNode }) {
+  const { t } = useLanguage()
   return (
     <div
       className="loading-skeleton"
@@ -10,7 +13,7 @@ export function LoadingRegion({ children }: { children: ReactNode }) {
       aria-live="polite"
       aria-busy="true"
     >
-      <span className="sr-only">{'Carregando conteúdo…'}</span>
+      <span className="sr-only">{t('Carregando conteúdo…')}</span>
       <div aria-hidden="true">{children}</div>
     </div>
   )
@@ -185,11 +188,12 @@ export function PageSkeleton({
   variant?: SkeletonVariant
   title?: string
 }) {
+  const { t } = useLanguage()
   return (
     <div className="admin-workspace">
       <header className="workspace-heading">
         <div>
-          {title ? <h1>{title}</h1> : <Skeleton className="sk-title" />}
+          {title ? <h1>{t(title)}</h1> : <Skeleton className="sk-title" />}
           <Skeleton className="sk-copy" />
         </div>
         <Skeleton className="sk-button" />

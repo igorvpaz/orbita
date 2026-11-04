@@ -28,8 +28,8 @@ export function UiIcon({
     ),
     partners: (
       <>
-        <path d="m8 12 3 3a2 2 0 0 0 3 0l5-5M3 7l5-3 4 3 4-3 5 3-2 9-5 4-4-2-4-4z" />
-        <path d="m12 7-3 3 2 2 3-2" />
+        <path d="M3 10h18M5 10v11h14V10M2 10l2-7h16l2 7M9 21v-7h6v7" />
+        <path d="M8 3v7m8-7v7" />
       </>
     ),
     services: (

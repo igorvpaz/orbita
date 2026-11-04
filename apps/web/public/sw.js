@@ -1,6 +1,7 @@
-const CACHE = 'orbita-static-v5-theme'
+const CACHE = 'orbita-static-v6-languages'
 const SHELL = [
   '/theme.js',
+  '/offline-language.js',
   '/offline.html',
   '/icons/icon-192.png',
   '/icons/icon-512.png',

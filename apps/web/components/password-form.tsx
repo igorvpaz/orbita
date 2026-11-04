@@ -1,11 +1,11 @@
 'use client'
-
+import { useLanguage } from '@/components/language-provider'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase/browser'
 import { apiRequest } from '@/components/api-client'
-
 export function PasswordForm({ invitation = false }: { invitation?: boolean }) {
+  const { t } = useLanguage()
   const router = useRouter()
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -21,7 +21,9 @@ export function PasswordForm({ invitation = false }: { invitation?: boolean }) {
       if (error) throw error
       if (invitation) await apiRequest('/api/auth/accept-invite', 'POST')
       const response = await apiRequest<{
-        profile: { role: 'admin' | 'member' }
+        profile: {
+          role: 'admin' | 'member'
+        }
       }>('/api/me')
       router.replace(response.profile.role === 'admin' ? '/admin' : '/member')
       router.refresh()
@@ -38,7 +40,7 @@ export function PasswordForm({ invitation = false }: { invitation?: boolean }) {
       className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6"
     >
       <label className="block text-sm">
-        Senha (mínimo 8 caracteres)
+        {t('Senha (mínimo 8 caracteres)')}
         <input
           className="mt-2 w-full rounded-xl border border-slate-600 bg-slate-900 p-3"
           type="password"
@@ -51,14 +53,14 @@ export function PasswordForm({ invitation = false }: { invitation?: boolean }) {
       </label>
       {message && (
         <p role="alert" className="text-amber-200">
-          {message}
+          {t(message)}
         </p>
       )}
       <button
         disabled={busy}
         className="w-full rounded-xl bg-teal-300 p-3 font-bold text-slate-950 disabled:opacity-50"
       >
-        {busy ? 'Aguarde...' : 'Salvar senha'}
+        {busy ? t('Aguarde...') : t('Salvar senha')}
       </button>
     </form>
   )

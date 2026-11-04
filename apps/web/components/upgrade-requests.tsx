@@ -1,4 +1,5 @@
 'use client'
+import { useLanguage } from '@/components/language-provider'
 import { useCallback, useEffect, useState } from 'react'
 import { PageSkeleton } from '@/components/loading-skeleton'
 import { apiRequest } from '@/components/api-client'
@@ -7,9 +8,13 @@ type RequestRow = {
   id: string
   status: string
   created_at: string
-  member?: { full_name: string; email: string }
+  member?: {
+    full_name: string
+    email: string
+  }
 }
 export function UpgradeRequests() {
+  const { t, locale } = useLanguage()
   const [requests, setRequests] = useState<RequestRow[]>([])
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -19,8 +24,11 @@ export function UpgradeRequests() {
     try {
       setError('')
       setRequests(
-        (await apiRequest<{ requests: RequestRow[] }>('/api/admin/upgrades'))
-          .requests,
+        (
+          await apiRequest<{
+            requests: RequestRow[]
+          }>('/api/admin/upgrades')
+        ).requests,
       )
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao carregar')
@@ -54,45 +62,46 @@ export function UpgradeRequests() {
     }
   }
   if (loading)
-    return <PageSkeleton variant="table" title="Solicitações de upgrade" />
+    return <PageSkeleton variant="table" title={t('Solicitações de upgrade')} />
   return (
     <div className="admin-workspace">
       <header className="workspace-heading">
         <div>
-          <h1>Solicitações de upgrade</h1>
-          <p>Aprove o acesso ao plano Premium dos seus membros.</p>
+          <h1>{t('Solicitações de upgrade')}</h1>
+          <p>{t('Aprove o acesso ao plano Premium dos seus membros.')}</p>
         </div>
         <button className="secondary-button" onClick={() => void load()}>
           <UiIcon name="refresh" />
-          Atualizar
+          {t('Atualizar')}
         </button>
       </header>
       {error && (
         <p role="alert" className="notice-error">
-          {error}
+          {t(error, 'Falha na operação')}
         </p>
       )}
       {message && (
         <p role="status" className="notice-success">
-          {message}
+          {t(message)}
         </p>
       )}
       <section className="surface-card">
         <div className="card-heading upgrade-card-title">
-          <h2>Pedidos recebidos</h2>
+          <h2>{t('Pedidos recebidos')}</h2>
           <span className="quiet-badge">
-            {requests.filter((r) => r.status === 'pending').length} pendentes
+            {requests.filter((r) => r.status === 'pending').length}
+            {t('pendentes')}
           </span>
         </div>
         <div className="table-scroll">
           <table className="members-table">
             <thead>
               <tr>
-                <th>Membro</th>
-                <th>Plano solicitado</th>
-                <th>Data</th>
-                <th>Status</th>
-                <th>Ações</th>
+                <th>{t('Membro')}</th>
+                <th>{t('Plano solicitado')}</th>
+                <th>{t('Data')}</th>
+                <th>{t('Status')}</th>
+                <th>{t('Ações')}</th>
               </tr>
             </thead>
             <tbody>
@@ -104,9 +113,9 @@ export function UpgradeRequests() {
                     {r.member?.email}
                   </td>
                   <td>
-                    <span className="premium-badge">Premium</span>
+                    <span className="premium-badge">{t('Premium')}</span>
                   </td>
-                  <td>{new Date(r.created_at).toLocaleString('pt-BR')}</td>
+                  <td>{new Date(r.created_at).toLocaleString(locale)}</td>
                   <td>
                     {
                       {
@@ -123,14 +132,14 @@ export function UpgradeRequests() {
                           disabled={busy}
                           onClick={() => void review(r.id, 'approved')}
                         >
-                          Aprovar upgrade
+                          {t('Aprovar upgrade')}
                         </button>
                         <button
                           disabled={busy}
                           className="action-danger"
                           onClick={() => void review(r.id, 'rejected')}
                         >
-                          Recusar
+                          {t('Recusar')}
                         </button>
                       </div>
                     )}
@@ -142,8 +151,8 @@ export function UpgradeRequests() {
         </div>
         {requests.length === 0 && (
           <div className="member-empty">
-            <h3>Nenhuma solicitação por enquanto.</h3>
-            <p>Os pedidos de upgrade dos membros aparecerão aqui.</p>
+            <h3>{t('Nenhuma solicitação por enquanto.')}</h3>
+            <p>{t('Os pedidos de upgrade dos membros aparecerão aqui.')}</p>
           </div>
         )}
       </section>

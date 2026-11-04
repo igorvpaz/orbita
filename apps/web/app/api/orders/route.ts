@@ -10,7 +10,13 @@ import {
 import { getCurrentUser, requireActiveMember } from '@/lib/auth'
 import { escapeHtml, sendTrackedEmail } from '@/lib/email'
 
-const schema = z.object({ serviceId: z.uuid(), idempotencyKey: z.uuid() })
+const schema = z
+  .object({
+    serviceId: z.uuid(),
+    idempotencyKey: z.uuid(),
+    scheduledStart: z.iso.datetime({ offset: true }),
+  })
+  .strict()
 
 export async function GET() {
   try {
@@ -19,7 +25,7 @@ export async function GET() {
     let query = db
       .from('orders')
       .select(
-        'id,service_id,member_id,status,total_cents,created_at,confirmed_at',
+        'id,service_id,member_id,status,total_cents,created_at,confirmed_at,scheduled_start,scheduled_end',
       )
       .order('created_at', { ascending: false })
       .limit(200)
@@ -75,18 +81,25 @@ export async function POST(request: Request) {
         member_id: authUser.id,
         service_id: input.serviceId,
         idempotency_key: input.idempotencyKey,
+        scheduled_start: input.scheduledStart,
       })
-      .select('id,total_cents,status')
+      .select('id,total_cents,status,service_id,scheduled_start')
       .single()
     if (inserted.error?.code === '23505') {
       const existing = dbResult(
         await db
           .from('orders')
-          .select('id,total_cents,status')
+          .select('id,total_cents,status,service_id,scheduled_start')
           .eq('member_id', authUser.id)
           .eq('idempotency_key', input.idempotencyKey)
           .single(),
       )
+      if (
+        existing.service_id !== input.serviceId ||
+        new Date(existing.scheduled_start).getTime() !==
+          new Date(input.scheduledStart).getTime()
+      )
+        throw new ApiError(409, 'Chave de pedido já utilizada')
       return privateJson({ order: existing, duplicate: true })
     }
     const order = dbResult(inserted)

@@ -1,5 +1,6 @@
-/* eslint-disable @next/next/no-img-element -- Signed private images expire quickly and bypass image optimization cache. */
+/* eslint-disable @next/next/no-img-element -- Local and signed service media. */
 'use client'
+import { useLanguage } from '@/components/language-provider'
 import Link from 'next/link'
 import { ContentSkeleton } from '@/components/loading-skeleton'
 import { useEffect, useState } from 'react'
@@ -7,7 +8,9 @@ import { apiRequest } from '@/components/api-client'
 import { PremiumUpgrade } from '@/components/premium-upgrade'
 import { UiIcon } from '@/components/ui-icon'
 import type { CatalogService } from '@/components/member-catalog'
+import { BookingForm } from './booking-form'
 export function ServiceDetail({ id }: { id: string }) {
+  const { t } = useLanguage()
   const [service, setService] = useState<CatalogService | null>(null)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -81,16 +84,16 @@ export function ServiceDetail({ id }: { id: string }) {
         href={service ? `/member?unitId=${service.unit_id}` : '/member'}
         className="inline-block text-sm text-[#937728]"
       >
-        ← {'Voltar'}
+        ← {t('Voltar')}
       </Link>
       {error && (
         <p role="alert" className="rounded-xl bg-[#fff0ed] p-4 text-[#a54a35]">
-          {error}
+          {t(error, 'Falha na operação')}
         </p>
       )}
       {message && (
         <p role="status" className="rounded-xl bg-[#edf5e8] p-4 text-[#4d713b]">
-          {message}
+          {t(message)}
         </p>
       )}
       {!service && !error && <ContentSkeleton variant="detail" />}
@@ -111,17 +114,17 @@ export function ServiceDetail({ id }: { id: string }) {
           </div>
           <div className="space-y-5 p-6 sm:p-8">
             <p className="text-xs uppercase tracking-wider text-[#937728]">
-              {service.partner_name} · {service.category}
+              {service.partner_name} · {t(service.category)}
             </p>
-            <h1 className="text-3xl font-bold">{service.name}</h1>
-            <p className="text-[#77796d]">{service.description_pt}</p>
+            <h1 className="text-3xl font-bold">{t(service.name)}</h1>
+            <p className="text-[#77796d]">{t(service.description_pt)}</p>
             <p className="text-2xl font-bold">
               {currency(service.price_cents)}
             </p>
             <p className="text-xs text-[#8f9483]">
-              {
-                'Solicitação sem cobrança online. O valor será confirmado pela equipe.'
-              }
+              {t(
+                'Solicitação sem cobrança online. O valor será confirmado pela equipe.',
+              )}
             </p>
             <p className="service-hours">
               <UiIcon name="clock" />
@@ -129,7 +132,7 @@ export function ServiceDetail({ id }: { id: string }) {
                 ? service.schedules
                     .map((s) => `${s.start}–${s.end}`)
                     .join(' · ')
-                : 'A qualquer hora'}{' '}
+                : t('A qualquer hora')}{' '}
               · {service.unit_name}
             </p>
             {service.locked ? (
@@ -142,8 +145,10 @@ export function ServiceDetail({ id }: { id: string }) {
                   }
                 >
                   {service.available_now
-                    ? 'Disponível agora'
-                    : 'Volte no horário de atendimento para solicitar esta experiência.'}
+                    ? t('Disponível agora')
+                    : t(
+                        'Agende um horário de atendimento para esta experiência.',
+                      )}
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
@@ -151,16 +156,10 @@ export function ServiceDetail({ id }: { id: string }) {
                     onClick={() => void action('interest')}
                     className="rounded-xl border border-[#cfb14b] px-6 py-3 font-semibold text-[#937728] disabled:opacity-50"
                   >
-                    {'Tenho interesse'}
-                  </button>
-                  <button
-                    disabled={busy || !service.can_order}
-                    onClick={() => void action('order')}
-                    className="rounded-xl bg-[#f4cc4e] px-6 py-3 font-semibold text-[#303027] disabled:opacity-50"
-                  >
-                    {'Solicitar contratação'}
+                    {t('Tenho interesse')}
                   </button>
                 </div>
+                <BookingForm serviceId={id} />
               </>
             )}
           </div>

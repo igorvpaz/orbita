@@ -1,14 +1,20 @@
-/* eslint-disable @next/next/no-img-element -- Signed private images expire quickly and bypass image optimization cache. */
+/* eslint-disable @next/next/no-img-element -- Local and signed service media. */
 'use client'
-
+import { useLanguage } from '@/components/language-provider'
 import { useCallback, useEffect, useState } from 'react'
 import { PageSkeleton, Skeleton } from '@/components/loading-skeleton'
 import { apiRequest } from '@/components/api-client'
 import { UiIcon } from '@/components/ui-icon'
 import { statusLabel } from '@/lib/status-label'
-
-type Unit = { id: string; name: string }
-type Plan = { id: string; name: string; code: string }
+type Unit = {
+  id: string
+  name: string
+}
+type Plan = {
+  id: string
+  name: string
+  code: string
+}
 type Partner = {
   id: string
   name: string
@@ -28,10 +34,14 @@ type Service = {
   partner_id: string
   status: string
   price_cents: number
+  capacity_per_slot: number
+  slot_duration_minutes: number
   access_plan: 'basic' | 'premium'
   category: string
   description_pt: string
-  media: { image_url: string | null }[]
+  media: {
+    image_url: string | null
+  }[]
   rules: {
     plan_id: string | null
     weekdays: number[]
@@ -57,6 +67,8 @@ type Member = {
   } | null
 }
 type Order = {
+  scheduled_start?: string | null
+  scheduled_end?: string | null
   id: string
   service_id: string
   service_name: string
@@ -75,21 +87,22 @@ type Metrics = {
   nominal_confirmed_cents: number
   latest_orders: Order[]
 }
-
-const money = (cents: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-    cents / 100,
-  )
 const field =
   'w-full rounded-xl border border-[#dcdcd6] bg-[#f4f4f2] px-3 py-3 text-[#292925] focus:border-[#c2a53d] focus:outline-none'
 const button =
   'rounded-xl bg-[#f4cc4e] px-5 py-3 font-semibold text-[#262622] disabled:opacity-50'
-
 export function AdminWorkspace({
   section,
 }: {
   section: 'dashboard' | 'partners' | 'services' | 'members' | 'orders'
 }) {
+  const { t, locale } = useLanguage()
+  const money = (cents: number) =>
+    new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(cents / 100)
+
   const [units, setUnits] = useState<Unit[]>([])
   const [plans, setPlans] = useState<Plan[]>([])
   const [partners, setPartners] = useState<Partner[]>([])
@@ -105,7 +118,6 @@ export function AdminWorkspace({
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [memberSearch, setMemberSearch] = useState('')
-
   const load = useCallback(async () => {
     setLoading(true)
     try {
@@ -117,29 +129,46 @@ export function AdminWorkspace({
         section === 'services' ||
         section === 'members'
       ) {
-        const ref = await apiRequest<{ units: Unit[]; plans: Plan[] }>(
-          '/api/admin/reference',
-        )
+        const ref = await apiRequest<{
+          units: Unit[]
+          plans: Plan[]
+        }>('/api/admin/reference')
         setUnits(ref.units)
         setPlans(ref.plans)
       }
       if (section === 'partners' || section === 'services')
         setPartners(
-          (await apiRequest<{ partners: Partner[] }>('/api/partners')).partners,
+          (
+            await apiRequest<{
+              partners: Partner[]
+            }>('/api/partners')
+          ).partners,
         )
       if (section === 'services')
         setServices(
-          (await apiRequest<{ services: Service[] }>('/api/admin/services'))
-            .services,
+          (
+            await apiRequest<{
+              services: Service[]
+            }>('/api/admin/services')
+          ).services,
         )
       if (section === 'members') {
         setMembers(
-          (await apiRequest<{ members: Member[] }>('/api/admin/members'))
-            .members,
+          (
+            await apiRequest<{
+              members: Member[]
+            }>('/api/admin/members')
+          ).members,
         )
       }
       if (section === 'orders')
-        setOrders((await apiRequest<{ orders: Order[] }>('/api/orders')).orders)
+        setOrders(
+          (
+            await apiRequest<{
+              orders: Order[]
+            }>('/api/orders')
+          ).orders,
+        )
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Falha ao carregar')
     } finally {
@@ -153,7 +182,6 @@ export function AdminWorkspace({
     }, 0)
     return () => clearTimeout(timer)
   }, [load])
-
   async function act(
     operation: () => Promise<unknown>,
     success = 'Salvo com sucesso',
@@ -171,7 +199,6 @@ export function AdminWorkspace({
       setBusy(false)
     }
   }
-
   const title = {
     dashboard: 'Visão geral',
     partners: 'Parceiros',
@@ -182,7 +209,7 @@ export function AdminWorkspace({
   if (loaded !== section)
     return (
       <PageSkeleton
-        title={title}
+        title={t(title)}
         variant={
           section === 'dashboard'
             ? 'dashboard'
@@ -196,18 +223,18 @@ export function AdminWorkspace({
     <div className="admin-workspace" aria-busy={loading}>
       <header className="workspace-heading">
         <div>
-          <h1>{title}</h1>
+          <h1>{t(title)}</h1>
           <p>
             {section === 'members'
-              ? 'Cadastre membros, gerencie acessos e acompanhe assinaturas.'
-              : 'Tudo o que seu coworking precisa, em um só lugar.'}
+              ? t('Cadastre membros, gerencie acessos e acompanhe assinaturas.')
+              : t('Tudo o que seu coworking precisa, em um só lugar.')}
           </p>
         </div>
         {section === 'members' ? (
-          <div className="member-stats" aria-label="Resumo dos membros">
+          <div className="member-stats" aria-label={t('Resumo dos membros')}>
             <div>
               <strong>{members.length}</strong>
-              <span>membros</span>
+              <span>{t('membros')}</span>
             </div>
             <div className="stat-highlight">
               <strong>
@@ -216,7 +243,7 @@ export function AdminWorkspace({
                     .length
                 }
               </strong>
-              <span>ativos</span>
+              <span>{t('ativos')}</span>
             </div>
             <div>
               <strong>
@@ -225,30 +252,30 @@ export function AdminWorkspace({
                     .length
                 }
               </strong>
-              <span>inativos</span>
+              <span>{t('inativos')}</span>
             </div>
           </div>
         ) : (
           <button onClick={() => void load()} className="secondary-button">
             <UiIcon name="refresh" />
-            Atualizar
+            {t('Atualizar')}
           </button>
         )}
       </header>
       {loading && (
         <div role="status">
-          <span className="sr-only">Atualizando conteúdo…</span>
+          <span className="sr-only">{t('Atualizando conteúdo…')}</span>
           <Skeleton className="sk-refresh-line" />
         </div>
       )}
       {message && (
         <p role="status" className="rounded-xl bg-[#edf6ee] p-4 text-[#35643d]">
-          {message}
+          {t(message)}
         </p>
       )}
       {error && (
         <p role="alert" className="rounded-xl bg-[#fff0ee] p-4 text-[#a43e32]">
-          {error}
+          {t(error, 'Falha na operação')}
         </p>
       )}
 
@@ -261,7 +288,8 @@ export function AdminWorkspace({
                 onClick={() => setDays(value)}
                 className={`rounded-full px-4 py-2 text-sm ${days === value ? 'bg-[#f4cc4e] text-[#262622]' : 'border border-[#dcdcd6]'}`}
               >
-                {value} dias
+                {value}
+                {t('dias')}
               </button>
             ))}
           </div>
@@ -280,16 +308,17 @@ export function AdminWorkspace({
                 key={label}
                 className="rounded-2xl border border-[#e7e7e2] bg-white p-5"
               >
-                <p className="text-sm text-[#73736d]">{label}</p>
+                <p className="text-sm text-[#73736d]">{t(label)}</p>
                 <p className="mt-3 text-2xl font-bold">{value}</p>
               </div>
             ))}
           </div>
           <p className="text-xs text-[#878780]">
-            Valor nominal contratado, não pagamento recebido. Visualizações =
-            eventos registrados.
+            {t(
+              'Valor nominal contratado, não pagamento recebido. Visualizações = eventos registrados.',
+            )}
           </p>
-          <h2 className="text-xl font-semibold">Pedidos recentes</h2>
+          <h2 className="text-xl font-semibold">{t('Pedidos recentes')}</h2>
           <OrderList orders={metrics?.latest_orders ?? []} />
         </>
       )}
@@ -297,7 +326,7 @@ export function AdminWorkspace({
       {section === 'partners' && (
         <>
           <section className="rounded-2xl border border-[#e7e7e2] bg-white p-5">
-            <h2 className="mb-5 text-xl font-semibold">Novo parceiro</h2>
+            <h2 className="mb-5 text-xl font-semibold">{t('Novo parceiro')}</h2>
             <form
               className="grid gap-4 sm:grid-cols-2"
               onSubmit={(event) => {
@@ -325,7 +354,7 @@ export function AdminWorkspace({
               }}
             >
               <label>
-                Unidade
+                {t('Unidade')}
                 <select name="unitId" required className={field}>
                   {units.map((unit) => (
                     <option key={unit.id} value={unit.id}>
@@ -335,19 +364,19 @@ export function AdminWorkspace({
                 </select>
               </label>
               <label>
-                Nome
+                {t('Nome')}
                 <input name="name" required minLength={2} className={field} />
               </label>
               <label className="sm:col-span-2">
-                Descrição
+                {t('Descrição')}
                 <textarea name="description" className={field} rows={2} />
               </label>
               <label>
-                E-mail de contato
+                {t('E-mail de contato')}
                 <input name="contactEmail" type="email" className={field} />
               </label>
               <label>
-                Comissão (%)
+                {t('Comissão (%)')}
                 <input
                   name="commissionPercent"
                   type="number"
@@ -358,7 +387,7 @@ export function AdminWorkspace({
                 />
               </label>
               <label>
-                Taxa fixa (R$)
+                {t('Taxa fixa (R$)')}
                 <input
                   name="fixedFeeCents"
                   type="number"
@@ -368,7 +397,7 @@ export function AdminWorkspace({
                 />
               </label>
               <label>
-                Válido desde
+                {t('Válido desde')}
                 <input
                   name="validFrom"
                   type="date"
@@ -378,20 +407,22 @@ export function AdminWorkspace({
                 />
               </label>
               <label>
-                Válido até
+                {t('Válido até')}
                 <input name="validUntil" type="date" className={field} />
               </label>
               <label className="sm:col-span-2">
-                Observações comerciais
+                {t('Observações comerciais')}
                 <textarea name="notes" rows={2} className={field} />
               </label>
               <button disabled={busy || !units.length} className={button}>
-                Cadastrar parceiro
+                {t('Cadastrar parceiro')}
               </button>
             </form>
           </section>
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold">Parceiros cadastrados</h2>
+            <h2 className="text-xl font-semibold">
+              {t('Parceiros cadastrados')}
+            </h2>
             {partners.map((partner) => (
               <div
                 key={partner.id}
@@ -402,11 +433,12 @@ export function AdminWorkspace({
                     <h3 className="font-semibold">{partner.name}</h3>
                     <p className="text-sm text-[#73736d]">
                       {partner.description || 'Sem descrição'} ·{' '}
-                      {statusLabel(partner.status)}
+                      {t(statusLabel(partner.status))}
                     </p>
                     <p className="text-xs text-[#878780]">
-                      Comissão: {partner.terms[0]?.commission_percent ?? '—'}% ·
-                      Taxa:{' '}
+                      {t('Comissão:')}
+                      {partner.terms[0]?.commission_percent ?? '—'}
+                      {t('% · Taxa:')}{' '}
                       {partner.terms[0]?.fixed_fee_cents == null
                         ? '—'
                         : money(partner.terms[0].fixed_fee_cents)}
@@ -424,12 +456,12 @@ export function AdminWorkspace({
                     }
                     className="rounded-xl border border-[#dcdcd6] px-4 py-2 text-sm"
                   >
-                    {partner.status === 'active' ? 'Inativar' : 'Ativar'}
+                    {partner.status === 'active' ? t('Inativar') : t('Ativar')}
                   </button>
                 </div>
                 <details className="mt-4 text-sm">
                   <summary className="cursor-pointer text-[#857027]">
-                    Editar dados e condições
+                    {t('Editar dados e condições')}
                   </summary>
                   <form
                     className="mt-4 grid gap-3 sm:grid-cols-2"
@@ -504,18 +536,20 @@ export function AdminWorkspace({
                     <input name="validUntil" type="date" className={field} />
                     <textarea
                       name="notes"
-                      placeholder="Observações"
+                      placeholder={t('Observações')}
                       className={field}
                     />
                     <button disabled={busy} className={button}>
-                      Salvar alterações
+                      {t('Salvar alterações')}
                     </button>
                   </form>
                 </details>
               </div>
             ))}
             {partners.length === 0 && (
-              <p className="text-[#878780]">Nenhum parceiro cadastrado.</p>
+              <p className="text-[#878780]">
+                {t('Nenhum parceiro cadastrado.')}
+              </p>
             )}
           </section>
         </>
@@ -524,7 +558,7 @@ export function AdminWorkspace({
       {section === 'services' && (
         <>
           <section className="rounded-2xl border border-[#e7e7e2] bg-white p-5">
-            <h2 className="mb-5 text-xl font-semibold">Novo serviço</h2>
+            <h2 className="mb-5 text-xl font-semibold">{t('Novo serviço')}</h2>
             <form
               className="grid gap-4 sm:grid-cols-2"
               onSubmit={(event) => {
@@ -547,21 +581,21 @@ export function AdminWorkspace({
                         },
                       ]
                     : []
-                  const created = await apiRequest<{ id: string }>(
-                    '/api/admin/services',
-                    'POST',
-                    {
-                      unitId: d.get('unitId'),
-                      partnerId: d.get('partnerId'),
-                      name: d.get('name'),
-                      descriptionPt: d.get('descriptionPt'),
-                      category: d.get('category'),
-                      priceCents: Math.round(Number(d.get('price')) * 100),
-                      accessPlan: d.get('accessPlan'),
-                      status: d.get('status'),
-                      rules,
-                    },
-                  )
+                  const created = await apiRequest<{
+                    id: string
+                  }>('/api/admin/services', 'POST', {
+                    unitId: d.get('unitId'),
+                    partnerId: d.get('partnerId'),
+                    name: d.get('name'),
+                    descriptionPt: d.get('descriptionPt'),
+                    capacityPerSlot: Number(d.get('capacityPerSlot')),
+                    slotDurationMinutes: Number(d.get('slotDurationMinutes')),
+                    category: d.get('category'),
+                    priceCents: Math.round(Number(d.get('price')) * 100),
+                    accessPlan: d.get('accessPlan'),
+                    status: d.get('status'),
+                    rules,
+                  })
                   const photo = d.get('photo')
                   if (photo instanceof File && photo.size) {
                     const upload = new FormData()
@@ -581,7 +615,7 @@ export function AdminWorkspace({
               }}
             >
               <label>
-                Unidade
+                {t('Unidade')}
                 <select
                   name="unitId"
                   className={field}
@@ -597,7 +631,7 @@ export function AdminWorkspace({
                 </select>
               </label>
               <label>
-                Parceiro
+                {t('Parceiro')}
                 <select name="partnerId" className={field} required>
                   {partners
                     .filter(
@@ -613,15 +647,15 @@ export function AdminWorkspace({
                 </select>
               </label>
               <label>
-                Nome
+                {t('Nome')}
                 <input name="name" className={field} required minLength={2} />
               </label>
               <label>
-                Categoria
+                {t('Categoria')}
                 <input name="category" className={field} required />
               </label>
               <label>
-                Preço (R$)
+                {t('Preço (R$)')}
                 <input
                   name="price"
                   type="number"
@@ -632,14 +666,41 @@ export function AdminWorkspace({
                 />
               </label>
               <label>
-                Status
+                {t('Capacidade por horário')}
+                <input
+                  name="capacityPerSlot"
+                  type="number"
+                  min="1"
+                  max="500"
+                  defaultValue={10}
+                  required
+                  className={field}
+                />
+              </label>
+              <label>
+                {t('Duração do horário (minutos)')}
+                <select
+                  name="slotDurationMinutes"
+                  defaultValue={60}
+                  className={field}
+                >
+                  {[15, 30, 45, 60, 90, 120, 180, 240].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                      {t(' min')}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {t('Status')}
                 <select name="status" className={field}>
-                  <option value="draft">Rascunho</option>
-                  <option value="published">Publicado</option>
+                  <option value="draft">{t('Rascunho')}</option>
+                  <option value="published">{t('Publicado')}</option>
                 </select>
               </label>
               <label className="sm:col-span-2">
-                Descrição em português
+                {t('Descrição em português')}
                 <textarea
                   name="descriptionPt"
                   minLength={10}
@@ -649,7 +710,7 @@ export function AdminWorkspace({
                 />
               </label>
               <label>
-                Foto (JPG, PNG ou WebP, até 5 MB)
+                {t('Foto (JPG, PNG ou WebP, até 5 MB)')}
                 <input
                   name="photo"
                   type="file"
@@ -658,16 +719,16 @@ export function AdminWorkspace({
                 />
               </label>
               <label>
-                Texto alternativo da foto
+                {t('Texto alternativo da foto')}
                 <input name="altPt" className={field} />
               </label>
               <div className="sm:col-span-2 rounded-xl border border-[#deded8] p-4">
                 <p className="mb-3 text-sm font-semibold">
-                  Disponibilidade opcional · 0=domingo, 6=sábado
+                  {t('Disponibilidade opcional · 0=domingo, 6=sábado')}
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label>
-                    Dias separados por vírgula
+                    {t('Dias separados por vírgula')}
                     <input
                       name="weekdays"
                       placeholder="1,2,3,4,5"
@@ -675,18 +736,18 @@ export function AdminWorkspace({
                     />
                   </label>
                   <label>
-                    Plano
+                    {t('Plano')}
                     <select name="planId" className={field}>
-                      <option value="">Todos</option>
+                      <option value="">{t('Todos')}</option>
                       {plans.map((plan) => (
                         <option key={plan.id} value={plan.id}>
-                          {plan.name}
+                          {t(plan.name)}
                         </option>
                       ))}
                     </select>
                   </label>
                   <label>
-                    Início
+                    {t('Início')}
                     <input
                       name="startTime"
                       type="time"
@@ -695,7 +756,7 @@ export function AdminWorkspace({
                     />
                   </label>
                   <label>
-                    Fim
+                    {t('Fim')}
                     <input
                       name="endTime"
                       type="time"
@@ -704,7 +765,7 @@ export function AdminWorkspace({
                     />
                   </label>
                   <label>
-                    Prioridade
+                    {t('Prioridade')}
                     <input
                       name="priority"
                       type="number"
@@ -715,19 +776,19 @@ export function AdminWorkspace({
                 </div>
               </div>
               <label>
-                Acesso por plano
+                {t('Acesso por plano')}
                 <select name="accessPlan" className={field}>
-                  <option value="basic">Básico e Premium</option>
-                  <option value="premium">Exclusivo Premium</option>
+                  <option value="basic">{t('Básico e Premium')}</option>
+                  <option value="premium">{t('Exclusivo Premium')}</option>
                 </select>
               </label>
               <button disabled={busy || !partners.length} className={button}>
-                Cadastrar serviço
+                {t('Cadastrar serviço')}
               </button>
             </form>
           </section>
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold">Catálogo</h2>
+            <h2 className="text-xl font-semibold">{t('Catálogo')}</h2>
             {services.map((service) => (
               <div
                 key={service.id}
@@ -743,13 +804,13 @@ export function AdminWorkspace({
                   />
                 )}
                 <div className="min-w-40 flex-1">
-                  <h3 className="font-semibold">{service.name}</h3>
+                  <h3 className="font-semibold">{t(service.name)}</h3>
                   <p className="text-sm text-[#73736d]">
-                    {service.category} · {money(service.price_cents)} ·{' '}
-                    {statusLabel(service.status)} ·{' '}
+                    {t(service.category)} · {money(service.price_cents)} ·{' '}
+                    {t(statusLabel(service.status))} ·{' '}
                     {units.find((unit) => unit.id === service.unit_id)?.name}
                     {service.access_plan === 'premium' && (
-                      <span className="premium-badge">Premium</span>
+                      <span className="premium-badge">{t('Premium')}</span>
                     )}
                   </p>
                 </div>
@@ -772,16 +833,16 @@ export function AdminWorkspace({
                         className="rounded-xl border border-[#dcdcd6] px-3 py-2 text-xs"
                       >
                         {status === 'published'
-                          ? 'Publicar'
+                          ? t('Publicar')
                           : status === 'archived'
-                            ? 'Arquivar'
-                            : 'Rascunho'}
+                            ? t('Arquivar')
+                            : t('Rascunho')}
                       </button>
                     ))}
                 </div>
                 <details className="w-full text-sm">
                   <summary className="cursor-pointer text-[#857027]">
-                    Editar serviço / adicionar foto
+                    {t('Editar serviço / adicionar foto')}
                   </summary>
                   <form
                     className="mt-3 grid gap-3 sm:grid-cols-3"
@@ -798,6 +859,10 @@ export function AdminWorkspace({
                               Number(d.get('price')) * 100,
                             ),
                             descriptionPt: d.get('descriptionPt'),
+                            capacityPerSlot: Number(d.get('capacityPerSlot')),
+                            slotDurationMinutes: Number(
+                              d.get('slotDurationMinutes'),
+                            ),
                             accessPlan: d.get('accessPlan'),
                           },
                         ),
@@ -827,18 +892,47 @@ export function AdminWorkspace({
                       required
                     />
                     <label>
-                      Acesso por plano
+                      {t('Capacidade por horário')}
+                      <input
+                        name="capacityPerSlot"
+                        type="number"
+                        min="1"
+                        max="500"
+                        defaultValue={service.capacity_per_slot}
+                        required
+                        className={field}
+                      />
+                    </label>
+                    <label>
+                      {t('Duração do horário (minutos)')}
+                      <select
+                        name="slotDurationMinutes"
+                        defaultValue={service.slot_duration_minutes}
+                        className={field}
+                      >
+                        {[15, 30, 45, 60, 90, 120, 180, 240].map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                            {t(' min')}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      {t('Acesso por plano')}
                       <select
                         name="accessPlan"
                         defaultValue={service.access_plan}
                         className={field}
                       >
-                        <option value="basic">Básico e Premium</option>
-                        <option value="premium">Exclusivo Premium</option>
+                        <option value="basic">{t('Básico e Premium')}</option>
+                        <option value="premium">
+                          {t('Exclusivo Premium')}
+                        </option>
                       </select>
                     </label>
                     <button disabled={busy} className={button}>
-                      Salvar
+                      {t('Salvar')}
                     </button>
                   </form>
                   <form
@@ -867,12 +961,12 @@ export function AdminWorkspace({
                     />
                     <input
                       name="altPt"
-                      placeholder="Descrição da foto"
+                      placeholder={t('Descrição da foto')}
                       required
                       className={field}
                     />
                     <button disabled={busy} className={button}>
-                      Enviar foto
+                      {t('Enviar foto')}
                     </button>
                   </form>
                   <RuleEditor
@@ -885,7 +979,9 @@ export function AdminWorkspace({
               </div>
             ))}
             {services.length === 0 && (
-              <p className="text-[#878780]">Nenhum serviço cadastrado.</p>
+              <p className="text-[#878780]">
+                {t('Nenhum serviço cadastrado.')}
+              </p>
             )}
           </section>
         </>
@@ -898,8 +994,8 @@ export function AdminWorkspace({
             aria-labelledby="create-member-title"
           >
             <div className="card-heading">
-              <h2 id="create-member-title">Cadastrar novo membro</h2>
-              <span className="quiet-badge">Acesso imediato</span>
+              <h2 id="create-member-title">{t('Cadastrar novo membro')}</h2>
+              <span className="quiet-badge">{t('Acesso imediato')}</span>
             </div>
             <form
               className="member-create-form"
@@ -926,31 +1022,31 @@ export function AdminWorkspace({
               }}
             >
               <label>
-                E-mail
+                {t('E-mail')}
                 <input
                   name="email"
                   type="email"
                   required
-                  placeholder="nome@exemplo.com"
+                  placeholder={t('nome@exemplo.com')}
                   autoComplete="off"
                   className={field}
                 />
               </label>
               <label>
-                Nome
+                {t('Nome')}
                 <input
                   name="fullName"
-                  placeholder="Nome completo"
+                  placeholder={t('Nome completo')}
                   required
                   minLength={2}
                   className={field}
                 />
               </label>
               <label>
-                Senha inicial
+                {t('Senha inicial')}
                 <input
                   name="password"
-                  placeholder="Mínimo de 8 caracteres"
+                  placeholder={t('Mínimo de 8 caracteres')}
                   type="password"
                   required
                   minLength={8}
@@ -960,7 +1056,7 @@ export function AdminWorkspace({
                 />
               </label>
               <label>
-                Unidade
+                {t('Unidade')}
                 <select name="unitId" required className={field}>
                   {units.map((unit) => (
                     <option key={unit.id} value={unit.id}>
@@ -970,31 +1066,32 @@ export function AdminWorkspace({
                 </select>
               </label>
               <label>
-                Plano
+                {t('Plano')}
                 <select name="planId" required className={field}>
                   {plans.map((plan) => (
                     <option key={plan.id} value={plan.id}>
-                      {plan.name}
+                      {t(plan.name)}
                     </option>
                   ))}
                 </select>
               </label>
               <label>
-                Status inicial
+                {t('Status inicial')}
                 <select name="status" className={field}>
-                  <option value="active">Ativa</option>
-                  <option value="inactive">Inativa</option>
+                  <option value="active">{t('Ativa')}</option>
+                  <option value="inactive">{t('Inativa')}</option>
                 </select>
               </label>
               <label>
-                Expira em (opcional)
+                {t('Expira em (opcional)')}
                 <input name="expiresAt" type="date" className={field} />
               </label>
               <button
                 disabled={busy || !units.length}
                 className="primary-button member-submit"
               >
-                <UiIcon name="plus" /> Criar membro
+                <UiIcon name="plus" />
+                {t('Criar membro')}
               </button>
             </form>
           </section>
@@ -1004,15 +1101,15 @@ export function AdminWorkspace({
           >
             <div className="member-list-toolbar">
               <h2 id="member-list-title">
-                Membros cadastrados{' '}
+                {t('Membros cadastrados')}{' '}
                 <span className="count-badge">{members.length}</span>
               </h2>
               <div className="list-controls">
                 <label className="search-field">
                   <UiIcon name="search" />
                   <input
-                    aria-label="Buscar membros"
-                    placeholder="Buscar por nome ou e-mail"
+                    aria-label={t('Buscar membros')}
+                    placeholder={t('Buscar por nome ou e-mail')}
                     value={memberSearch}
                     onChange={(event) => setMemberSearch(event.target.value)}
                   />
@@ -1020,7 +1117,7 @@ export function AdminWorkspace({
                 <button
                   onClick={() => void load()}
                   disabled={loading}
-                  aria-label="Atualizar membros"
+                  aria-label={t('Atualizar membros')}
                   className="icon-button"
                 >
                   <UiIcon name="refresh" />
@@ -1034,19 +1131,19 @@ export function AdminWorkspace({
               >
                 <thead>
                   <tr>
-                    <th>Membro</th>
-                    <th>Unidade</th>
-                    <th>Plano</th>
-                    <th>Status</th>
-                    <th>Cadastro</th>
-                    <th>Ações</th>
+                    <th>{t('Membro')}</th>
+                    <th>{t('Unidade')}</th>
+                    <th>{t('Plano')}</th>
+                    <th>{t('Status')}</th>
+                    <th>{t('Cadastro')}</th>
+                    <th>{t('Ações')}</th>
                   </tr>
                 </thead>
                 {members
                   .filter((member) =>
                     `${member.full_name} ${member.email}`
-                      .toLocaleLowerCase('pt-BR')
-                      .includes(memberSearch.toLocaleLowerCase('pt-BR')),
+                      .toLocaleLowerCase(locale)
+                      .includes(memberSearch.toLocaleLowerCase(locale)),
                   )
                   .map((member) => (
                     <MemberRow
@@ -1065,11 +1162,11 @@ export function AdminWorkspace({
                 <span>
                   <UiIcon name="members" />
                 </span>
-                <h3>Seu próximo membro começa aqui.</h3>
+                <h3>{t('Seu próximo membro começa aqui.')}</h3>
                 <p>
-                  Cadastre o primeiro membro no formulário acima.
+                  {t('Cadastre o primeiro membro no formulário acima.')}
                   <br />
-                  Ele já poderá entrar com o e-mail e a senha definidos.
+                  {t('Ele já poderá entrar com o e-mail e a senha definidos.')}
                 </p>
               </div>
             ) : members.filter((member) =>
@@ -1078,16 +1175,16 @@ export function AdminWorkspace({
                   .includes(memberSearch.toLocaleLowerCase('pt-BR')),
               ).length === 0 ? (
               <div className="member-empty">
-                <h3>Nenhum membro encontrado</h3>
-                <p>Tente buscar por outro nome ou e-mail.</p>
+                <h3>{t('Nenhum membro encontrado')}</h3>
+                <p>{t('Tente buscar por outro nome ou e-mail.')}</p>
               </div>
             ) : (
               <div className="table-footer">
                 {members.length}{' '}
                 {members.length === 1
-                  ? 'membro cadastrado'
-                  : 'membros cadastrados'}
-                <span>Gerenciado por você. Pronto para ir além.</span>
+                  ? t('membro cadastrado')
+                  : t('membros cadastrados')}
+                <span>{t('Gerenciado por você. Pronto para ir além.')}</span>
               </div>
             )}
           </section>
@@ -1109,7 +1206,6 @@ export function AdminWorkspace({
     </div>
   )
 }
-
 function MemberRow({
   member,
   units,
@@ -1123,6 +1219,7 @@ function MemberRow({
   busy: boolean
   act: (operation: () => Promise<unknown>, success?: string) => Promise<void>
 }) {
+  const { t, locale } = useLanguage()
   const current = member.membership
   const [panel, setPanel] = useState<
     'details' | 'password' | 'subscription' | null
@@ -1169,18 +1266,20 @@ function MemberRow({
         </td>
         <td>{member.unit_name}</td>
         <td>
-          <span className="plan-badge">{member.plan_name || 'Sem plano'}</span>
+          <span className="plan-badge">
+            {t(member.plan_name || 'Sem plano')}
+          </span>
         </td>
         <td>
           <span
             className={`status-badge ${current?.status === 'active' ? 'status-active' : ''}`}
           >
             <i />
-            {current?.status === 'active' ? 'Ativo' : 'Inativo'}
+            {current?.status === 'active' ? t('Ativo') : t('Inativo')}
           </span>
         </td>
         <td className="date-cell">
-          {new Date(member.created_at).toLocaleDateString('pt-BR')}
+          {new Date(member.created_at).toLocaleDateString(locale)}
         </td>
         <td>
           <div className="row-actions">
@@ -1188,19 +1287,19 @@ function MemberRow({
               aria-expanded={panel === 'subscription'}
               onClick={() => toggle('subscription')}
             >
-              Assinatura
+              {t('Assinatura')}
             </button>
             <button
               aria-expanded={panel === 'details'}
               onClick={() => toggle('details')}
             >
-              Editar
+              {t('Editar')}
             </button>
             <button
               aria-expanded={panel === 'password'}
               onClick={() => toggle('password')}
             >
-              Definir senha
+              {t('Definir senha')}
             </button>
             {current && (
               <button
@@ -1214,7 +1313,7 @@ function MemberRow({
                   save(current.status === 'active' ? 'inactive' : 'active')
                 }
               >
-                {current.status === 'active' ? 'Desativar' : 'Ativar'}
+                {current.status === 'active' ? t('Desativar') : t('Ativar')}
               </button>
             )}
           </div>
@@ -1227,15 +1326,15 @@ function MemberRow({
               <div className="editor-heading">
                 <h3>
                   {panel === 'details'
-                    ? 'Editar dados'
+                    ? t('Editar dados')
                     : panel === 'password'
-                      ? 'Definir nova senha'
-                      : 'Gerenciar assinatura'}{' '}
+                      ? t('Definir nova senha')
+                      : t('Gerenciar assinatura')}{' '}
                   · {member.full_name}
                 </h3>
                 <button
                   className="icon-button"
-                  aria-label="Fechar edição"
+                  aria-label={t('Fechar edição')}
                   onClick={() => setPanel(null)}
                 >
                   <UiIcon name="close" />
@@ -1259,7 +1358,7 @@ function MemberRow({
                   }}
                 >
                   <label>
-                    Nome
+                    {t('Nome')}
                     <input
                       name="fullName"
                       required
@@ -1269,7 +1368,7 @@ function MemberRow({
                     />
                   </label>
                   <label>
-                    E-mail
+                    {t('E-mail')}
                     <input
                       name="email"
                       type="email"
@@ -1279,7 +1378,7 @@ function MemberRow({
                     />
                   </label>
                   <label>
-                    Unidade
+                    {t('Unidade')}
                     <select
                       name="unitId"
                       required
@@ -1294,7 +1393,7 @@ function MemberRow({
                     </select>
                   </label>
                   <button disabled={busy} className="primary-button">
-                    Salvar dados
+                    {t('Salvar dados')}
                   </button>
                 </form>
               )}
@@ -1317,7 +1416,7 @@ function MemberRow({
                   }}
                 >
                   <label>
-                    Nova senha
+                    {t('Nova senha')}
                     <input
                       name="password"
                       type="password"
@@ -1325,14 +1424,18 @@ function MemberRow({
                       minLength={8}
                       maxLength={128}
                       autoComplete="new-password"
-                      placeholder="Mínimo de 8 caracteres"
+                      placeholder={t('Mínimo de 8 caracteres')}
                       className={field}
                     />
                   </label>
                   <button disabled={busy} className="primary-button">
-                    Salvar nova senha
+                    {t('Salvar nova senha')}
                   </button>
-                  <p>O membro poderá entrar com a nova senha imediatamente.</p>
+                  <p>
+                    {t(
+                      'O membro poderá entrar com a nova senha imediatamente.',
+                    )}
+                  </p>
                 </form>
               )}
               {panel === 'subscription' &&
@@ -1345,7 +1448,7 @@ function MemberRow({
                     }}
                   >
                     <label>
-                      Plano
+                      {t('Plano')}
                       <select
                         value={planId}
                         onChange={(event) => setPlanId(event.target.value)}
@@ -1353,13 +1456,13 @@ function MemberRow({
                       >
                         {plans.map((plan) => (
                           <option key={plan.id} value={plan.id}>
-                            {plan.name}
+                            {t(plan.name)}
                           </option>
                         ))}
                       </select>
                     </label>
                     <label>
-                      Validade
+                      {t('Validade')}
                       <input
                         type="date"
                         value={expires}
@@ -1368,11 +1471,11 @@ function MemberRow({
                       />
                     </label>
                     <button disabled={busy} className="primary-button">
-                      Salvar plano e validade
+                      {t('Salvar plano e validade')}
                     </button>
                   </form>
                 ) : (
-                  <p>Assinatura não configurada.</p>
+                  <p>{t('Assinatura não configurada.')}</p>
                 ))}
             </div>
           </td>
@@ -1381,7 +1484,6 @@ function MemberRow({
     </tbody>
   )
 }
-
 function RuleEditor({
   service,
   plans,
@@ -1393,10 +1495,11 @@ function RuleEditor({
   busy: boolean
   act: (operation: () => Promise<unknown>, success?: string) => Promise<void>
 }) {
+  const { t } = useLanguage()
   const current = service.rules.find((rule) => rule.enabled)
   return (
     <div className="mt-5 border-t border-[#deded8] pt-5">
-      <p className="mb-3 font-semibold">Disponibilidade e plano</p>
+      <p className="mb-3 font-semibold">{t('Disponibilidade e plano')}</p>
       <form
         className="grid gap-3 sm:grid-cols-3"
         onSubmit={(event) => {
@@ -1423,7 +1526,7 @@ function RuleEditor({
         }}
       >
         <label>
-          Dias (0=dom, 6=sáb)
+          {t('Dias (0=dom, 6=sáb)')}
           <input
             name="weekdays"
             required
@@ -1432,22 +1535,22 @@ function RuleEditor({
           />
         </label>
         <label>
-          Plano
+          {t('Plano')}
           <select
             name="planId"
             defaultValue={current?.plan_id ?? ''}
             className={field}
           >
-            <option value="">Todos</option>
+            <option value="">{t('Todos')}</option>
             {plans.map((plan) => (
               <option key={plan.id} value={plan.id}>
-                {plan.name}
+                {t(plan.name)}
               </option>
             ))}
           </select>
         </label>
         <label>
-          Prioridade
+          {t('Prioridade')}
           <input
             name="priority"
             type="number"
@@ -1456,7 +1559,7 @@ function RuleEditor({
           />
         </label>
         <label>
-          Início
+          {t('Início')}
           <input
             name="startTime"
             type="time"
@@ -1465,7 +1568,7 @@ function RuleEditor({
           />
         </label>
         <label>
-          Fim
+          {t('Fim')}
           <input
             name="endTime"
             type="time"
@@ -1475,7 +1578,7 @@ function RuleEditor({
         </label>
         <div className="flex items-end gap-2">
           <button disabled={busy} className={button}>
-            Salvar regra
+            {t('Salvar regra')}
           </button>
           <button
             type="button"
@@ -1491,18 +1594,18 @@ function RuleEditor({
             }
             className="rounded-xl border border-[#dcdcd6] px-4 py-3 text-sm"
           >
-            Remover
+            {t('Remover')}
           </button>
         </div>
       </form>
       <p className="mt-2 text-xs text-[#878780]">
-        Sem regra, o serviço publicado fica disponível para todos os planos e
-        horários.
+        {t(
+          'Sem regra, o serviço publicado fica disponível para todos os planos e horários.',
+        )}
       </p>
     </div>
   )
 }
-
 function OrderList({
   orders,
   onChange,
@@ -1512,6 +1615,13 @@ function OrderList({
   onChange?: (order: Order, status: 'confirmed' | 'cancelled') => void
   busy?: boolean
 }) {
+  const { t, locale } = useLanguage()
+  const money = (cents: number) =>
+    new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(cents / 100)
+
   return (
     <div className="space-y-3">
       {orders.map((order) => (
@@ -1524,12 +1634,17 @@ function OrderList({
               {order.service_name || order.service_id}
             </h3>
             <p className="text-sm text-[#73736d]">
-              {money(order.total_cents)} · {statusLabel(order.status)} ·{' '}
-              {new Date(order.created_at).toLocaleString('pt-BR')}
+              {order.scheduled_start &&
+                new Date(order.scheduled_start).toLocaleString(locale, {
+                  timeZone: 'America/Sao_Paulo',
+                })}{' '}
+              · {money(order.total_cents)} · {t(statusLabel(order.status))} ·{' '}
+              {new Date(order.created_at).toLocaleString(locale)}
             </p>
             <p className="text-xs text-[#878780]">
-              Pedido {order.id.slice(0, 8)} · Membro{' '}
-              {order.member_id.slice(0, 8)}
+              {t('Pedido')}
+              {order.id.slice(0, 8)}
+              {t(' · Membro')} {order.member_id.slice(0, 8)}
             </p>
           </div>
           {onChange && order.status === 'requested' && (
@@ -1539,14 +1654,14 @@ function OrderList({
                 onClick={() => onChange(order, 'confirmed')}
                 className={button}
               >
-                Confirmar
+                {t('Confirmar')}
               </button>
               <button
                 disabled={busy}
                 onClick={() => onChange(order, 'cancelled')}
                 className="rounded-xl border border-[#dcdcd6] px-4 py-2 text-sm"
               >
-                Cancelar
+                {t('Cancelar')}
               </button>
             </div>
           )}
@@ -1554,7 +1669,7 @@ function OrderList({
       ))}
       {orders.length === 0 && (
         <p className="rounded-2xl border border-[#e7e7e2] p-5 text-[#878780]">
-          Nenhum pedido neste período.
+          {t('Nenhum pedido neste período.')}
         </p>
       )}
     </div>

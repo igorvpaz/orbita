@@ -1,4 +1,5 @@
 'use client'
+import { useLanguage } from '@/components/language-provider'
 import { useCallback, useEffect, useState } from 'react'
 import { ContentSkeleton } from '@/components/loading-skeleton'
 import { apiRequest } from '@/components/api-client'
@@ -14,6 +15,7 @@ type State = {
   }[]
 }
 export function PremiumUpgrade() {
+  const { t } = useLanguage()
   const [state, setState] = useState<State | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -52,36 +54,36 @@ export function PremiumUpgrade() {
       <span className="premium-emblem">
         <UiIcon name="crown" />
       </span>
-      <span className="eyebrow">ÓRBITA PREMIUM</span>
+      <span className="eyebrow">{t('ÓRBITA PREMIUM')}</span>
       <h2>
         {premium
-          ? 'Seu acesso Premium está ativo.'
-          : 'Mais possibilidades para sua rotina.'}
+          ? t('Seu acesso Premium está ativo.')
+          : t('Mais possibilidades para sua rotina.')}
       </h2>
       <p>
-        {
-          'Salas executivas, estúdios e serviços exclusivos. Mantenha os benefícios do Básico e libere experiências Premium em todas as unidades.'
-        }
+        {t(
+          'Salas executivas, estúdios e serviços exclusivos. Mantenha os benefícios do Básico e libere experiências Premium em todas as unidades.',
+        )}
       </p>
       <ul>
-        <li>{'Experiências exclusivas em todo o RS'}</li>
-        <li>{'Salas executivas e estúdios de gravação'}</li>
-        <li>{'Acesso em todas as unidades Órbita'}</li>
+        <li>{t('Experiências exclusivas em todo o RS')}</li>
+        <li>{t('Salas executivas e estúdios de gravação')}</li>
+        <li>{t('Acesso em todas as unidades Órbita')}</li>
       </ul>
       {error && (
         <p role="alert" className="notice-error">
-          {error}
+          {t(error, 'Falha na operação')}
         </p>
       )}
       {premium ? (
         <p role="status" className="notice-success">
-          {
-            'Os serviços Premium estão liberados nos respectivos horários de atendimento.'
-          }
+          {t(
+            'Os serviços Premium estão liberados nos respectivos horários de atendimento.',
+          )}
         </p>
       ) : pending ? (
         <p role="status" className="upgrade-pending">
-          {'Solicitação enviada. Aguardando aprovação do administrador.'}
+          {t('Solicitação enviada. Aguardando aprovação do administrador.')}
         </p>
       ) : (
         <button
@@ -90,13 +92,13 @@ export function PremiumUpgrade() {
           onClick={() => void request()}
         >
           <UiIcon name="crown" />
-          {busy ? 'Enviando…' : 'Solicitar upgrade para Premium'}
+          {busy ? t('Enviando…') : t('Solicitar upgrade para Premium')}
         </button>
       )}
       <p className="upgrade-disclaimer">
-        {
-          'O administrador analisa o pedido. Não há cobrança nem troca automática de plano.'
-        }
+        {t(
+          'O administrador analisa o pedido. Não há cobrança nem troca automática de plano.',
+        )}
       </p>
     </section>
   )

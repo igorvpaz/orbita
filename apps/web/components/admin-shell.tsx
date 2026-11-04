@@ -1,12 +1,13 @@
 'use client'
+import { useLanguage } from '@/components/language-provider'
 import { ThemeToggle } from '@/components/theme-provider'
-
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { OrbitaLogo } from '@/components/orbita-logo'
 import { UiIcon } from '@/components/ui-icon'
 import { LogoutButton } from '@/components/logout-button'
+import { LanguageSelect } from '@/components/language-provider'
 type NavItem = {
   label: string
   href: string
@@ -36,6 +37,7 @@ export function AdminShell({
   children: React.ReactNode
   mode?: 'admin' | 'member'
 }) {
+  const { t } = useLanguage()
   const pathname = usePathname()
   const isMember = mode === 'member'
   const home = isMember ? '/member' : '/admin'
@@ -84,7 +86,7 @@ export function AdminShell({
         aria-current={active ? 'page' : undefined}
       >
         <UiIcon name={item.icon} />
-        <span>{item.label}</span>
+        <span>{t(item.label)}</span>
       </Link>
     )
   }
@@ -96,12 +98,12 @@ export function AdminShell({
       }}
     >
       <div className="mobile-admin-bar">
-        <Link href={home} aria-label="Órbita, início">
+        <Link href={home} aria-label={t('Órbita, início')}>
           <OrbitaLogo />
         </Link>
         <button
           onClick={() => setOpen(!open)}
-          aria-label={open ? 'Fechar menu' : 'Abrir menu'}
+          aria-label={open ? t('Fechar menu') : t('Abrir menu')}
           aria-expanded={open}
           aria-controls="admin-sidebar"
         >
@@ -111,7 +113,7 @@ export function AdminShell({
       {open && (
         <button
           className="sidebar-backdrop"
-          aria-label="Fechar menu"
+          aria-label={t('Fechar menu')}
           onClick={() => setOpen(false)}
         />
       )}
@@ -121,26 +123,37 @@ export function AdminShell({
       >
         <button
           className="sidebar-close"
-          aria-label="Fechar navegação"
+          aria-label={t('Fechar navegação')}
           onClick={() => setOpen(false)}
         >
           <UiIcon name="close" />
         </button>
-        <Link href={home} className="sidebar-brand" aria-label="Órbita, início">
+        <Link
+          href={home}
+          className="sidebar-brand"
+          aria-label={t('Órbita, início')}
+        >
           <OrbitaLogo />
-          <span>SEU ESPAÇO, MAIS POSSIBILIDADES.</span>
+          <span>{t('SEU ESPAÇO, MAIS POSSIBILIDADES.')}</span>
         </Link>
-        <nav aria-label={isMember ? 'Área do membro' : 'Administração'}>
+        <nav aria-label={isMember ? t('Área do membro') : t('Administração')}>
           <p className="sidebar-label">
-            {isMember ? 'SUA EXPERIÊNCIA' : 'GESTÃO DO COWORKING'}
+            {isMember ? t('SUA EXPERIÊNCIA') : t('GESTÃO DO COWORKING')}
           </p>
           {items.map(navItem)}
           {!isMember && (
             <>
-              <p className="sidebar-label admin-nav-label">ADMINISTRAÇÃO</p>
+              <p className="sidebar-label admin-nav-label">
+                {t('ADMINISTRAÇÃO')}
+              </p>
               {navItem({
                 label: 'Membros',
                 href: '/admin/members',
+                icon: 'members',
+              })}
+              {navItem({
+                label: 'Administradores',
+                href: '/admin/administrators',
                 icon: 'members',
               })}
               {navItem({
@@ -158,7 +171,7 @@ export function AdminShell({
               <p>
                 {name}
                 <span className="admin-role">
-                  {isMember ? 'MEMBRO' : 'ADMIN'}
+                  {isMember ? t('MEMBRO') : t('ADMIN')}
                 </span>
               </p>
               <span className="sidebar-email" title={email}>
@@ -167,9 +180,10 @@ export function AdminShell({
             </div>
           </div>
           <div className="sidebar-locale">
+            <LanguageSelect />
             <ThemeToggle />
           </div>
-          <LogoutButton label={'Sair da conta'} />
+          <LogoutButton label={t('Sair da conta')} />
         </div>
       </aside>
       <main className="admin-main">{children}</main>

@@ -84,6 +84,8 @@ export async function POST(request: Request) {
           price_cents: input.priceCents,
           status: input.status,
           access_plan: input.accessPlan,
+          capacity_per_slot: input.capacityPerSlot,
+          slot_duration_minutes: input.slotDurationMinutes,
         })
         .select('id')
         .single(),

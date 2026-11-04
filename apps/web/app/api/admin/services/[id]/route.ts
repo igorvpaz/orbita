@@ -52,6 +52,8 @@ export async function PATCH(
           price_cents: input.priceCents,
           status: input.status,
           access_plan: input.accessPlan,
+          capacity_per_slot: input.capacityPerSlot,
+          slot_duration_minutes: input.slotDurationMinutes,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id),

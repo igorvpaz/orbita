@@ -11,7 +11,7 @@ O frontend chama `/api/*` para ações de negócio. O backend usa o cliente Supa
 
 ## Estado
 
-Publicado em 03/11/2026 no Google Cloud Run: **https://orbita-dpvgtjzjva-rj.a.run.app**. Auth, papéis e gestão direta de membros usam o Supabase remoto. Login do administrador, proteção das rotas, catálogo com 36 fotos e arquivos do PWA foram verificados por HTTP na URL pública. Consulte [o registro da publicação](docs/deployment-2026-11-03.md). Nenhuma credencial real deve ser versionada.
+Publicado em 03/11/2026 no Google Cloud Run: **https://orbita-dpvgtjzjva-rj.a.run.app**. Auth, papéis e gestão direta de membros usam o Supabase remoto. Login do administrador, proteção das rotas, catálogo com 36 fotos e arquivos do PWA foram verificados por HTTP na URL pública. Atualizado em 04/11/2026; consulte [o registro atual](docs/deployment-2026-11-04.md). Nenhuma credencial real deve ser versionada.
 
 ## Execução local
 
@@ -36,7 +36,7 @@ pnpm build
 
 Este projeto de treinamento usa contas criadas pelo administrador, sem cadastro público, confirmação de e-mail ou SMTP para autenticação. Em `/admin/members`, informe nome, e-mail, senha inicial (8–128 caracteres), unidade, plano e status. O membro entra imediatamente com as credenciais definidas. Nos botões **Editar**, **Definir senha** e **Assinatura**, o admin altera nome/e-mail/unidade e define uma nova senha; plano, validade e ativação continuam no mesmo painel. As senhas atuais não podem ser consultadas.
 
-O projeto remoto é `orbita` (`ifazwnuhtajmmkwxhrjr`). As cinco migrations foram aplicadas. Foram criados o administrador solicitado (credenciais privadas, não publicadas), seis unidades fictícias no RS e os planos Básico/Premium. A senha foi definida conforme solicitado na conversa e não é versionada. O seed remoto contém 36 serviços: seis por unidade, sendo dois Premium.
+O projeto remoto é `orbita` (`ifazwnuhtajmmkwxhrjr`). As migrations de Auth, catálogo, reservas, administradores e métricas foram aplicadas. Foram criados o administrador solicitado (credenciais privadas, não publicadas), seis unidades fictícias no RS e os planos Básico/Premium. A senha foi definida conforme solicitado na conversa e não é versionada. O seed remoto contém 36 serviços: seis por unidade, sendo dois Premium.
 
 - `apps/web/.env.local`, ignorado pelo Git, contém URL, chave publicável e chave secreta de servidor. Nunca exponha `SUPABASE_SECRET_KEY` em variáveis `NEXT_PUBLIC_*`.
 - Site URL remoto: `http://localhost:3000`; callbacks permitidos: `/auth/callback`, `/auth/confirm` e `/reset-password` nesse host. Configure o domínio publicado antes do deploy.
@@ -83,7 +83,7 @@ O script constrói imagem, publica no Artifact Registry, implanta no Cloud Run e
 - Assinatura inativa/futura/expirada mostra apenas status. API e RLS bloqueiam catálogo, mídia e ações. Membro nunca define preço/status.
 - Membros criados pelo admin recebem imediatamente o status de assinatura escolhido. Nenhum aceite de convite é necessário.
 - `/member/subscription`: acompanha e solicita upgrade Premium; `/member/install`: botão de instalação quando compatível e instruções para Android, iOS e computador.
-- PWA guarda apenas a tela estática offline e ícones. Dados privados, catálogo e APIs usam rede e não são cacheados. A interface é inteiramente em português, com modo claro/escuro que segue inicialmente o dispositivo e salva a escolha manual.
+- PWA guarda apenas a tela estática offline e ícones. Dados privados, catálogo e APIs usam rede e não são cacheados. A interface oferece português, inglês, espanhol, francês, alemão e italiano, com preferência inicial do navegador e escolha salva em cookie. O tema claro/escuro segue inicialmente o dispositivo e salva a escolha manual.
 
 Crie um membro pelo painel para a demo. Compartilhe credenciais com avaliadores por canal seguro, nunca no repositório. O vídeo final deve ter até 5 minutos e demonstrar admin cadastrar serviço → membro ver e solicitar → admin confirmar → assinatura desativada.
 
@@ -123,3 +123,13 @@ Catálogo, detalhes, pedidos, assinatura, instalação e telas administrativas u
 ## Temas e fotos dos serviços
 
 O botão de tema fica no login e no menu lateral de administradores e membros. No primeiro acesso, segue o dispositivo; escolhas manuais persistem localmente. Fotos fictícias otimizadas em WebP cobrem todos os serviços; fotos enviadas pelo administrador têm prioridade. Os prompts e a procedência estão em [docs/branding/service-photos-prompts.md](docs/branding/service-photos-prompts.md).
+
+## Administradores, reservas e métricas — atualização de 04/11/2026
+
+- **Administradores:** `/admin/administrators` permite criar, editar e excluir outras contas de administração, com senha escolhida no painel e sem confirmação por e-mail. A API bloqueia excluir a própria conta e o banco preserva ao menos um admin. A exclusão conserva histórico comercial e auditorias, removendo o acesso da conta.
+- **Reserva de horário:** o membro escolhe data e faixa válida, até 30 dias à frente. Cada pedido reserva uma pessoa. As 36 experiências fictícias usam capacidades de 1, 10, 20, 30 e 50 pessoas por faixa; o admin configura capacidade e duração (15 a 240 minutos). Data, plano, assinatura, atendimento, preço e vagas são revalidados no PostgreSQL, inclusive contra chamadas diretas à Data API. Locks serializam reservas concorrentes; cancelamentos liberam vagas e repetição da mesma requisição não duplica o pedido.
+- **Dashboard:** Hoje, 7 dias, 30 dias e período personalizado (até 366 dias), no calendário de Brasília. Cards, evolução diária, jornada, rankings por visualizações/interesses/pedidos/valor e comparação entre unidades. O quadro detalhado inclui todos os serviços. Valor confirmado usa a data de confirmação e representa valor nominal, pois não há processamento de pagamentos; pedidos e eventos usam sua data de criação.
+- **Idiomas:** seletor no login e no menu de ambos os papéis; textos da interface, catálogo fictício, datas, valores e instruções de instalação nos seis idiomas. Textos livres cadastrados pelo admin permanecem no idioma informado, sem tradução automática paga.
+- **Navegação:** ícone de Parceiros representa um estabelecimento; sair da conta aparece na área fixa do menu para admins e membros, inclusive em telas menores.
+
+Validação: 51 testes web e 3 shared, TypeScript/ESLint, build standalone e fluxo integrado remoto com contas temporárias. Foram exercitados CRUD de admins, bloqueio de autoexclusão, revogação após exclusão, duas requisições simultâneas pela última vaga (uma aceita, uma rejeitada), idempotência, horário inválido, cancelamento, confirmação, soma no dashboard, Premium e seis idiomas. Os dados temporários foram removidos. A suíte completa de RLS em banco local descartável e a instalação física do PWA não fazem parte dessa validação.

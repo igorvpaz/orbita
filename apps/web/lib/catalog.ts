@@ -34,7 +34,7 @@ export async function getMemberCatalog(unitId?: string) {
     await db
       .from('services')
       .select(
-        'id,name,description_pt,description_en,price_cents,category,partner_id,created_at,access_plan',
+        'id,name,description_pt,description_en,price_cents,category,partner_id,created_at,access_plan,capacity_per_slot,slot_duration_minutes',
       )
       .eq('unit_id', selectedId)
       .eq('status', 'published'),

@@ -1,4 +1,5 @@
 'use client'
+import { useLanguage } from '@/components/language-provider'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabase } from '@/lib/supabase/browser'
@@ -10,6 +11,7 @@ export function LoginForm({
   next?: string
   linkError?: boolean
 }) {
+  const { t } = useLanguage()
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -47,23 +49,23 @@ export function LoginForm({
   }
   return (
     <form onSubmit={submit} className="login-form">
-      <label htmlFor="login-email">E-mail</label>
+      <label htmlFor="login-email">{t('E-mail')}</label>
       <input
         id="login-email"
         name="email"
-        placeholder={'seu@email.com'}
+        placeholder={t('seu@email.com')}
         type="email"
         required
         autoComplete="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <label htmlFor="login-password">{'Senha'}</label>
+      <label htmlFor="login-password">{t('Senha')}</label>
       <div className="login-password-field">
         <input
           id="login-password"
           name="password"
-          placeholder={'Sua senha'}
+          placeholder={t('Sua senha')}
           type={showPassword ? 'text' : 'password'}
           required
           minLength={8}
@@ -75,7 +77,7 @@ export function LoginForm({
           type="button"
           className="login-password-toggle"
           onClick={() => setShowPassword(!showPassword)}
-          aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+          aria-label={showPassword ? t('Ocultar senha') : t('Mostrar senha')}
           aria-pressed={showPassword}
         >
           <svg
@@ -95,15 +97,15 @@ export function LoginForm({
       </div>
       {message && (
         <p role="alert" className="login-feedback">
-          {message}
+          {t(message)}
         </p>
       )}
       <button disabled={busy} className="login-submit">
-        {busy ? 'Entrando…' : 'Entrar'}
+        {busy ? t('Entrando…') : t('Entrar')}
       </button>
       <div className="login-form-footer">
-        <p>{'Esqueceu a senha? Fale com o administrador.'}</p>
-        <span>{'Apenas usuários cadastrados'}</span>
+        <p>{t('Esqueceu a senha? Fale com o administrador.')}</p>
+        <span>{t('Apenas usuários cadastrados')}</span>
       </div>
     </form>
   )

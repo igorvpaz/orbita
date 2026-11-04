@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import './updates.css'
 import { PwaProvider } from '@/components/pwa-provider'
 import { ThemeProvider } from '@/components/theme-provider'
+import { LanguageProvider } from '@/components/language-provider'
+import { requestLanguage } from '@/lib/i18n-server'
 
 export const metadata: Metadata = {
   title: 'Órbita',
@@ -27,17 +30,20 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const language = await requestLanguage()
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html lang={language} suppressHydrationWarning>
       <head>
         {/* The tiny local bootstrap must run before paint to avoid a theme flash. */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script src="/theme.js" />
       </head>
       <body>
-        <ThemeProvider>
-          <PwaProvider>{children}</PwaProvider>
-        </ThemeProvider>
+        <LanguageProvider language={language}>
+          <ThemeProvider>
+            <PwaProvider>{children}</PwaProvider>
+          </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
   )

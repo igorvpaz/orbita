@@ -1,13 +1,11 @@
 'use client'
-
+import { useLanguage } from '@/components/language-provider'
 import { createContext, useContext, useEffect, useState } from 'react'
-
 type Theme = 'light' | 'dark'
 const ThemeContext = createContext({
   theme: 'light' as Theme,
   toggle: () => {},
 })
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light')
   useEffect(() => {
@@ -55,17 +53,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     </ThemeContext.Provider>
   )
 }
-
 export function ThemeToggle() {
+  const { t } = useLanguage()
   const { theme, toggle } = useContext(ThemeContext)
   return (
     <button
       type="button"
       className="theme-toggle"
       onClick={toggle}
-      aria-label="Modo escuro"
+      aria-label={t('Modo escuro')}
       aria-pressed={theme === 'dark'}
-      title="Alternar entre modo claro e escuro"
+      title={t('Alternar entre modo claro e escuro')}
     >
       <svg
         className="theme-sun"
@@ -92,8 +90,8 @@ export function ThemeToggle() {
       >
         <path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z" />
       </svg>
-      <span className="theme-light-label">Modo claro</span>
-      <span className="theme-dark-label">Modo escuro</span>
+      <span className="theme-light-label">{t('Modo claro')}</span>
+      <span className="theme-dark-label">{t('Modo escuro')}</span>
     </button>
   )
 }
