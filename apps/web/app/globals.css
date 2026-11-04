@@ -19,6 +19,10 @@ a {
   color: #85e7ce;
 }
 
+a.home-entry {
+  color: #292a25;
+}
+
 .admin-shell {
   --accent: #f4cc4e;
   --ink: #292a25;
