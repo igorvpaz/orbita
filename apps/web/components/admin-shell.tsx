@@ -182,8 +182,8 @@ export function AdminShell({
           <div className="sidebar-locale">
             <LanguageSelect />
             <ThemeToggle />
+            <LogoutButton label={t('Sair da conta')} />
           </div>
-          <LogoutButton label={t('Sair da conta')} />
         </div>
       </aside>
       <main className="admin-main">{children}</main>

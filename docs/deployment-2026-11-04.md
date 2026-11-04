@@ -2,9 +2,9 @@
 
 - URL: https://orbita-dpvgtjzjva-rj.a.run.app
 - Projeto/região: `orbita-513618` / `southamerica-east1`.
-- Revisão ativa: `orbita-00006-fm4`.
-- Imagem: `southamerica-east1-docker.pkg.dev/orbita-513618/orbita/orbita:20261104081723`.
-- Cloud Build: `08a903f3-30e7-4c0a-838e-1601177ea95f`, concluído com sucesso.
+- Revisão ativa: `orbita-00008-qvl`.
+- Imagem: `southamerica-east1-docker.pkg.dev/orbita-513618/orbita/orbita:20261104093143`.
+- Cloud Build: `23b93ff1-f080-42e8-b874-69aee4dc0121`, concluído com sucesso.
 - A conta de avaliação e os limites de escala existentes foram mantidos.
 
 ## Entregas
@@ -33,3 +33,9 @@ Aplicadas no Supabase as migrações `20261104042708`, `20261104042808`, `202611
 - Advisor de segurança sem novos avisos; a proteção contra senhas vazadas continua desabilitada, conforme decisão de treinamento já documentada.
 
 Não houve automação do navegador pessoal nem instalação física do PWA em celular. A suíte completa de RLS em Supabase local descartável permanece fora desta validação. A URL padrão do painel Auth Supabase não foi alterada; o login direto por senha foi validado na URL publicada, e os fluxos de e-mail seguem desabilitados.
+
+## Controles compactos da conta
+
+Idioma, tema e logout agora ficam lado a lado. Tema e sair mostram apenas ícones, com nomes acessíveis e tooltips. O idioma mostra globo + sigla; um disclosure nativo abre as seis opções e fecha com seleção, clique fora ou Esc, preservando o menu lateral no celular. No login, idioma e tema também são compactos.
+
+Validação deste ajuste: TypeScript, ESLint, 12 testes existentes de idioma/tema, build Docker e conferência HTTP do HTML publicado. Não foram alteradas regras de Auth, reservas ou banco.

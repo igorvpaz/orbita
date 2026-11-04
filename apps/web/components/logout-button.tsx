@@ -8,7 +8,10 @@ export function LogoutButton({ label }: { label?: string }) {
   const router = useRouter()
   return (
     <button
+      type="button"
       className="logout-button"
+      aria-label={t(label || 'Sair da conta')}
+      title={t(label || 'Sair da conta')}
       onClick={async () => {
         await apiRequest('/api/auth/logout', 'POST')
         router.replace('/login')
@@ -16,7 +19,6 @@ export function LogoutButton({ label }: { label?: string }) {
       }}
     >
       <UiIcon name="logout" />
-      {t(label) ?? t('Sair')}
     </button>
   )
 }

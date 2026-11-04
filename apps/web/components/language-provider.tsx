@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { languages, languageNames, translate, type Language } from '@/lib/i18n'
 const Context = createContext({
@@ -38,20 +38,72 @@ export function useLanguage() {
 }
 export function LanguageSelect() {
   const { language, change, t } = useLanguage()
+  const disclosure = useRef<HTMLDetailsElement>(null)
+  useEffect(() => {
+    function dismiss(event: PointerEvent) {
+      if (
+        event.target instanceof Node &&
+        !disclosure.current?.contains(event.target)
+      ) {
+        if (disclosure.current) disclosure.current.open = false
+      }
+    }
+    document.addEventListener('pointerdown', dismiss)
+    return () => document.removeEventListener('pointerdown', dismiss)
+  }, [])
+  const abbreviation = (value: Language) =>
+    value === 'pt-BR' ? 'PT' : value.toUpperCase()
   return (
-    <label className="language-select">
-      <span className="sr-only">{t('Idioma')}</span>
-      <select
-        aria-label={t('Idioma')}
-        value={language}
-        onChange={(e) => change(e.target.value as Language)}
+    <details
+      className="language-select"
+      ref={disclosure}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && disclosure.current?.open) {
+          event.preventDefault()
+          event.stopPropagation()
+          disclosure.current.open = false
+          disclosure.current.querySelector('summary')?.focus()
+        }
+      }}
+    >
+      <summary
+        aria-label={`${t('Idioma')}: ${languageNames[language]}`}
+        title={t('Idioma')}
       >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z" />
+        </svg>
+        <span>{abbreviation(language)}</span>
+      </summary>
+      <div className="language-options" aria-label={t('Idioma')}>
         {languages.map((l) => (
-          <option key={l} value={l}>
+          <button
+            key={l}
+            type="button"
+            lang={l}
+            aria-pressed={language === l}
+            onClick={() => {
+              change(l)
+              if (disclosure.current) {
+                disclosure.current.open = false
+                disclosure.current.querySelector('summary')?.focus()
+              }
+            }}
+          >
+            <span>{abbreviation(l)}</span>
             {languageNames[l]}
-          </option>
+          </button>
         ))}
-      </select>
-    </label>
+      </div>
+    </details>
   )
 }

@@ -90,8 +90,6 @@ export function ThemeToggle() {
       >
         <path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z" />
       </svg>
-      <span className="theme-light-label">{t('Modo claro')}</span>
-      <span className="theme-dark-label">{t('Modo escuro')}</span>
     </button>
   )
 }
